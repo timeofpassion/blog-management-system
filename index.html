@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>블로그 운영관리 시스템 - 열정의시간</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+<style>
+:root {
+  --bg:#f5f7fa; --card:#fff; --border:#e2e8f0; --text:#1a202c; --text-sub:#718096;
+  --primary:#2D5994; --primary-light:#e8f0fe; --accent:#F5C261;
+  --success:#38a169; --warning:#d69e2e; --danger:#e53e3e;
+  --sidebar-w:240px; --header-h:56px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Pretendard Variable',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;}
+
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);background:#1a202c;color:#fff;padding:20px 0;z-index:100;display:flex;flex-direction:column;}
+.sidebar-logo{padding:0 20px 24px;font-size:15px;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.1);}
+.sidebar-logo span{color:var(--accent);}
+.sidebar-nav{flex:1;padding:12px 0;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:#a0aec0;font-size:13px;transition:all .15s;border-left:3px solid transparent;}
+.nav-item:hover{background:rgba(255,255,255,0.05);color:#fff;}
+.nav-item.active{background:rgba(45,89,148,0.3);color:#fff;border-left-color:var(--accent);}
+.nav-item svg{width:18px;height:18px;flex-shrink:0;}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.1);font-size:11px;color:#718096;}
+
+.header{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--header-h);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:90;}
+.header-title{font-size:16px;font-weight:700;}
+.main{margin-left:var(--sidebar-w);padding-top:var(--header-h);min-height:100vh;}
+.content{padding:24px;}
+
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--card);border-radius:12px;padding:20px;border:1px solid var(--border);}
+.stat-card .label{font-size:12px;color:var(--text-sub);margin-bottom:8px;font-weight:500;}
+.stat-card .value{font-size:28px;font-weight:800;}
+.stat-card .sub{font-size:11px;color:var(--text-sub);margin-top:4px;}
+
+.kanban{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;overflow-x:auto;}
+.kanban-col{background:var(--bg);border-radius:10px;min-height:300px;}
+.kanban-col-header{padding:12px;font-size:12px;font-weight:700;border-bottom:2px solid;display:flex;justify-content:space-between;align-items:center;}
+.kanban-col-header .count{background:rgba(0,0,0,0.08);border-radius:10px;padding:1px 8px;font-size:11px;}
+.kanban-card{margin:8px;padding:12px;background:var(--card);border-radius:8px;border:1px solid var(--border);cursor:pointer;transition:box-shadow .15s;font-size:12px;}
+.kanban-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+.kanban-card .card-title{font-weight:600;margin-bottom:6px;font-size:13px;line-height:1.4;}
+.kanban-card .card-client{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;margin-bottom:6px;}
+.kanban-card .card-date{color:var(--text-sub);font-size:11px;}
+
+.table-wrap{background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+th{background:#f8fafc;padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);}
+td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#f8fafc;}
+
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-1{background:#e8f5e9;color:#2e7d32;}.badge-2{background:#e3f2fd;color:#1565c0;}.badge-3{background:#fff3e0;color:#e65100;}
+.badge-4{background:#fce4ec;color:#c62828;}.badge-5{background:#f3e5f5;color:#6a1b9a;}.badge-6{background:#e0f2f1;color:#00695c;}.badge-7{background:#e8eaf6;color:#283593;}
+
+.btn{padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--primary);color:#fff;}.btn-primary:hover{background:#1e4072;}
+.btn-secondary{background:#edf2f7;color:var(--text);}.btn-secondary:hover{background:#e2e8f0;}
+.btn-success{background:var(--success);color:#fff;}.btn-success:hover{background:#2f855a;}
+.btn-warning{background:var(--accent);color:#1a202c;}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-sm{padding:5px 10px;font-size:11px;}
+.btn-lg{padding:12px 24px;font-size:15px;}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;}
+.modal{background:var(--card);border-radius:16px;width:90%;max-width:800px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.modal-header h2{font-size:18px;font-weight:700;}
+.modal-body{padding:24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+.close-btn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-sub);padding:4px;}
+
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text-sub);margin-bottom:6px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:#fff;}
+.form-group textarea{min-height:120px;resize:vertical;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(45,89,148,0.1);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+.detail-grid{display:grid;grid-template-columns:1fr 360px;gap:24px;}
+.detail-main{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:24px;}
+.detail-sidebar{display:flex;flex-direction:column;gap:16px;}
+.detail-info{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:20px;}
+.detail-info h3{font-size:14px;font-weight:700;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.info-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;}
+.info-row .label{color:var(--text-sub);}
+
+.workflow{display:flex;gap:4px;margin:20px 0;}
+.workflow-step{flex:1;text-align:center;padding:10px 4px;font-size:10px;font-weight:700;border-radius:6px;background:#edf2f7;color:var(--text-sub);position:relative;}
+.workflow-step.done{background:#c6f6d5;color:#22543d;}
+.workflow-step.current{background:var(--primary);color:#fff;}
+.workflow-step.future{background:#edf2f7;color:#a0aec0;}
+
+.cardnews-preview{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;}
+.cn-frame{aspect-ratio:1;background:#f7fafc;border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--text-sub);}
+
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.cal-header{background:#f8fafc;padding:10px;text-align:center;font-size:11px;font-weight:700;color:var(--text-sub);}
+.cal-day{background:var(--card);padding:8px;min-height:100px;font-size:12px;}
+.cal-day .day-num{font-weight:700;margin-bottom:4px;color:var(--text-sub);font-size:11px;}
+.cal-day.other-month{background:#fafbfc;}
+.cal-day.today{background:#fffcf0;}
+.cal-event{padding:2px 6px;border-radius:4px;font-size:10px;margin-bottom:2px;cursor:pointer;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+.tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--card);border-radius:10px;padding:4px;border:1px solid var(--border);width:fit-content;}
+.tab{padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-sub);transition:all .15s;}
+.tab.active{background:var(--primary);color:#fff;}
+
+.filter-bar{display:flex;gap:12px;margin-bottom:20px;align-items:center;flex-wrap:wrap;}
+.filter-bar select{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff;}
+
+.client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
+.client-card{background:var(--card);border-radius:12px;padding:20px;border:1px solid var(--border);transition:box-shadow .15s;cursor:pointer;}
+.client-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+.client-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:8px;}
+
+.toast-container{position:fixed;top:70px;right:24px;z-index:300;display:flex;flex-direction:column;gap:8px;}
+.toast{padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.15);animation:slideIn .3s ease;}
+.toast-success{background:#38a169;}.toast-error{background:#e53e3e;}.toast-info{background:var(--primary);}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+.section-title{font-size:18px;font-weight:800;margin-bottom:16px;}
+.section-sub{font-size:13px;color:var(--text-sub);margin-bottom:20px;}
+.truncate{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:1400px){.kanban{grid-template-columns:repeat(4,minmax(180px,1fr));}}
+@media(max-width:1024px){
+  .sidebar{width:60px;}.sidebar-logo,.nav-item span,.sidebar-footer{display:none;}.nav-item{justify-content:center;padding:12px;}
+  .main{margin-left:60px;}.stat-grid{grid-template-columns:repeat(2,1fr);}.detail-grid{grid-template-columns:1fr;}
+  :root{--sidebar-w:60px;}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useMemo } = React;
+
+// ── SVG Icons ──
+const I = {
+  dash: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+  list: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>,
+  cal: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+  users: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  plus: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  ai: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>,
+  right: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>,
+  left: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>,
+  edit: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  check: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>,
+};
+
+// ── Status Config ──
+const STATUSES = [
+  {key:'1_주제선정', label:'주제선정', color:'#38a169', n:1},
+  {key:'2_AI원고생성', label:'AI원고생성', color:'#3182ce', n:2},
+  {key:'3_원고검수', label:'원고검수', color:'#dd6b20', n:3},
+  {key:'4_원장님컨펌', label:'원장님컨펌', color:'#e53e3e', n:4},
+  {key:'5_카드뉴스생성', label:'카드뉴스생성', color:'#805ad5', n:5},
+  {key:'6_디자인수정', label:'디자인수정', color:'#0694a2', n:6},
+  {key:'7_발행완료', label:'발행완료', color:'#2b6cb0', n:7},
+];
+const getStatus = (key) => STATUSES.find(s=>s.key===key)||{label:key,color:'#718096',n:0};
+
+// ── Initial Data ──
+const INIT_CLIENTS = [
+  {id:1,name:"멜로우 신사점",category:"medical",type:"피부과",color:"#2563eb",status:"계약 중",importance:"S급"},
+  {id:2,name:"멜로우 강북본점",category:"medical",type:"피부과",color:"#1d4ed8",status:"계약 중",importance:"S급"},
+  {id:3,name:"멜로우 천호점",category:"medical",type:"피부과",color:"#3b82f6",status:"계약 중",importance:"B급"},
+  {id:4,name:"멜로우 영등포점",category:"medical",type:"피부과",color:"#60a5fa",status:"계약 중",importance:"C급"},
+  {id:5,name:"멜로우 청담점",category:"medical",type:"피부과",color:"#93c5fd",status:"계약 중",importance:"B급"},
+  {id:6,name:"이현한방병원",category:"medical",type:"한방병원",color:"#059669",status:"계약 중",importance:"A급"},
+  {id:7,name:"순수안피부과",category:"beauty",type:"피부과",color:"#db2777",status:"계약 중",importance:"B급"},
+  {id:8,name:"인퓨스킨",category:"brand",type:"더마코스메틱",color:"#d97706",status:"계약 중",importance:"S급"},
+  {id:9,name:"오아로 청량리점",category:"medical",type:"의원",color:"#7c3aed",status:"계약 중",importance:"A급"},
+  {id:10,name:"올라라의원",category:"beauty",type:"의원",color:"#e11d48",status:"계약 중",importance:"B급"},
+  {id:11,name:"신통메디컬그룹",category:"medical",type:"메디컬그룹",color:"#0891b2",status:"계약 중",importance:"S급"},
+];
+
+const INIT_POSTS = [
+  {id:1,client_id:1,title:"봄철 피부 관리법 5가지",topic:"봄철 피부관리, 자외선차단, 보습",status:"7_발행완료",
+   content:"봄이 오면 피부도 변화를 겪습니다. 멜로우피부과에서 알려드리는 봄철 피부 관리법 5가지를 확인해보세요.\n\n■ 자외선 차단제 꼼꼼히 바르기\n외출 30분 전 SPF 50+ PA+++ 이상 제품을 도포하고, 2~3시간 간격으로 덧바르기를 권장합니다.\n\n■ 봄철 보습 관리\n건조한 바람으로 수분이 급격히 감소합니다. 세안 직후 3분 이내 보습제 도포가 핵심입니다.\n\n■ 각질 관리\n봄철에는 각질이 쌓이기 쉽습니다. 주 1~2회 순한 각질 제거제를 사용하세요.\n\n■ 알레르기 주의\n꽃가루, 미세먼지로 인한 피부 트러블에 주의하세요.\n\n■ 충분한 수분 섭취\n하루 1.5L 이상의 물을 마시는 것이 피부 건강의 기본입니다.",
+   assignee:"김AE",editor:"이에디터",designer:"박디자이너",publish_date:"2026-03-25",figma_url:"https://www.figma.com/design/JZYR60uMobhH0FLRCAg5GC",blog_url:"",manuscript_status:"컨펌완료",cardnews_status:"최종완료"},
+  {id:2,client_id:1,title:"레이저 토닝 시술 후 관리 가이드",topic:"레이저토닝, 시술후관리, 색소치료",status:"5_카드뉴스생성",
+   content:"레이저 토닝은 멜라닌 색소를 효과적으로 제거하는 시술입니다.\n\n■ 시술 후 관리 핵심\n- 시술 직후 24시간 세안 자제\n- SPF 50+ 자외선 차단제 필수\n- 보습제 수시 도포\n- 사우나, 찜질방 1주일 금지\n\n■ 시술 주기\n보통 2~4주 간격으로 5~10회 시술을 권장합니다.\n\n멜로우피부과 신사점에서 상담 받아보세요.",
+   assignee:"김AE",editor:"이에디터",designer:"박디자이너",publish_date:"2026-04-02",figma_url:"",blog_url:"",manuscript_status:"컨펌완료",cardnews_status:"AI생성완료"},
+  {id:3,client_id:2,title:"여드름 흉터 치료 방법 총정리",topic:"여드름흉터, 흉터치료, 프락셀",status:"6_디자인수정",
+   content:"여드름 흉터로 고민이시라면 멜로우피부과 강북본점에서 상담 받아보세요.\n\n■ 흉터 유형별 치료법\n1. 아이스픽 흉터: TCA 크로스 + 프락셀 레이저\n2. 롤링 흉터: 서브시전 + 필러\n3. 박스카 흉터: 프락셀 + 스킨 부스터\n\n■ 프락셀 레이저란?\n피부에 미세한 열 손상을 주어 콜라겐 재생을 촉진하는 시술입니다.\n\n■ 시술 후기\n평균 3~5회 시술 후 70% 이상 개선 효과를 보실 수 있습니다.",
+   assignee:"박AE",editor:"김에디터",designer:"최디자이너",publish_date:"2026-04-01",figma_url:"",blog_url:"",manuscript_status:"컨펌완료",cardnews_status:"디자인수정중"},
+  {id:4,client_id:6,title:"한방 다이어트 침 치료의 효과와 원리",topic:"한방다이어트, 침치료, 체중관리",status:"4_원장님컨펌",
+   content:"이현한방병원에서 알려드리는 한방 다이어트 침 치료의 효과와 원리입니다.\n\n■ 침 치료 다이어트란?\n경혈점을 자극하여 식욕 억제, 신진대사 촉진, 부종 제거 효과를 기대할 수 있는 한방 치료법입니다.\n\n■ 주요 효과\n- 식욕 조절\n- 소화기능 개선\n- 부종 완화\n- 스트레스성 과식 방지",
+   assignee:"박AE",editor:"김에디터",designer:"최디자이너",publish_date:"2026-04-05",figma_url:"",blog_url:"",manuscript_status:"검수완료",cardnews_status:"미착수"},
+  {id:5,client_id:7,title:"모공 축소 시술 종류 비교",topic:"모공축소, 피코토닝, 프락셀",status:"3_원고검수",
+   content:"순수안피부과에서 알려드리는 모공 축소 시술 비교입니다.\n\n■ 피코토닝\n- 짧은 시술 시간 (10~15분)\n- 다운타임 거의 없음\n- 3~5회 반복 권장\n\n■ 프락셀\n- 깊은 모공에 효과적\n- 3~5일 다운타임\n- 2~3회 시술로 효과",
+   assignee:"김AE",editor:"이에디터",designer:"박디자이너",publish_date:"2026-04-07",figma_url:"",blog_url:"",manuscript_status:"AI초안완료",cardnews_status:"미착수"},
+  {id:6,client_id:8,title:"인퓨스킨 브랜드 스토리",topic:"인퓨스킨, 브랜드스토리, 더마코스메틱",status:"2_AI원고생성",
+   content:"",assignee:"김AE",editor:"이에디터",designer:"박디자이너",publish_date:"2026-04-10",figma_url:"",blog_url:"",manuscript_status:"초안필요",cardnews_status:"미착수"},
+  {id:7,client_id:1,title:"4월 멜로우피부과 이벤트 안내",topic:"4월이벤트, 봄맞이, 피부시술",status:"1_주제선정",
+   content:"",assignee:"박AE",editor:"",designer:"",publish_date:"2026-04-15",figma_url:"",blog_url:"",manuscript_status:"초안필요",cardnews_status:"미착수"},
+  {id:8,client_id:2,title:"멜로우 강북본점 봄 시즌 프로모션",topic:"봄프로모션, 시즌할인",status:"7_발행완료",
+   content:"멜로우피부과 강북본점에서 봄맞이 특별 프로모션을 진행합니다.\n\n■ 이벤트 기간: 3월 1일 ~ 3월 31일\n■ 대상 시술: 레이저 토닝, 보톡스, 필러\n■ 할인율: 최대 30%\n\n지금 바로 상담 예약하세요!",
+   assignee:"박AE",editor:"김에디터",designer:"최디자이너",publish_date:"2026-03-20",figma_url:"",blog_url:"https://blog.naver.com/mellow_derm/example1",manuscript_status:"컨펌완료",cardnews_status:"최종완료"},
+];
+
+// ── Data Store (in-memory with localStorage persistence) ──
+function useStore() {
+  const loadLS = (key, fallback) => { try { const v = localStorage.getItem('blog_' + key); return v ? JSON.parse(v) : fallback; } catch { return fallback; } };
+  const saveLS = (key, val) => { try { localStorage.setItem('blog_' + key, JSON.stringify(val)); } catch {} };
+
+  const [clients] = useState(() => loadLS('clients', INIT_CLIENTS));
+  const [posts, setPosts] = useState(() => loadLS('posts', INIT_POSTS));
+  const [nextId, setNextId] = useState(() => loadLS('nextId', 9));
+
+  useEffect(() => { saveLS('posts', posts); }, [posts]);
+  useEffect(() => { saveLS('nextId', nextId); }, [nextId]);
+
+  const getClient = (id) => clients.find(c => c.id === id);
+
+  const postsWithClient = useMemo(() =>
+    posts.map(p => { const c = getClient(p.client_id); return {...p, client_name:c?.name||'', client_color:c?.color||'#718096', client_type:c?.type||''}; }),
+    [posts, clients]
+  );
+
+  const stats = useMemo(() => {
+    const total = posts.length;
+    const done = posts.filter(p => p.status === '7_발행완료').length;
+    const needs = posts.filter(p => ['3_원고검수','4_원장님컨펌'].includes(p.status)).length;
+    const by = {};
+    posts.forEach(p => { by[p.status] = (by[p.status]||0) + 1; });
+    return {total, done, in_progress: total - done, needs_attention: needs, by_status: by};
+  }, [posts]);
+
+  const createPost = (data) => {
+    const id = nextId;
+    setPosts(prev => [...prev, {id, ...data, status:'1_주제선정', content:'', manuscript_status:'초안필요', cardnews_status:'미착수', figma_url:'', blog_url:''}]);
+    setNextId(id + 1);
+    return id;
+  };
+
+  const updatePost = (id, fields) => {
+    setPosts(prev => prev.map(p => p.id === id ? {...p, ...fields} : p));
+  };
+
+  const advanceStatus = (id) => {
+    setPosts(prev => prev.map(p => {
+      if (p.id !== id) return p;
+      const idx = STATUSES.findIndex(s => s.key === p.status);
+      if (idx >= STATUSES.length - 1) return p;
+      const ns = STATUSES[idx + 1].key;
+      const upd = {status: ns};
+      if (ns === '3_원고검수') upd.manuscript_status = 'AI초안완료';
+      else if (ns === '4_원장님컨펌') upd.manuscript_status = '검수완료';
+      else if (ns === '5_카드뉴스생성') { upd.manuscript_status = '컨펌완료'; upd.cardnews_status = 'AI생성완료'; }
+      else if (ns === '6_디자인수정') upd.cardnews_status = '디자인수정중';
+      else if (ns === '7_발행완료') upd.cardnews_status = '최종완료';
+      return {...p, ...upd};
+    }));
+  };
+
+  const generateContent = (id) => {
+    const p = posts.find(x => x.id === id);
+    if (!p) return '';
+    const c = getClient(p.client_id);
+    const cn = c?.name || '클라이언트';
+    const ct = c?.type || '';
+    const topic = p.topic || p.title;
+    const content = `${p.title}\n\n${cn}에서 알려드리는 ${topic}에 대한 모든 것\n\n안녕하세요, ${cn}입니다.\n오늘은 많은 분들이 궁금해하시는 '${topic}'에 대해 자세히 알려드리겠습니다.\n\n■ ${topic}이란?\n\n${topic}은(는) 많은 분들이 관심을 가지고 계신 주제입니다. 정확한 정보를 바탕으로 올바른 선택을 하시는 것이 중요합니다. ${cn}에서는 풍부한 경험과 전문성을 바탕으로 최상의 결과를 제공해 드리고 있습니다.\n\n■ ${topic}의 주요 포인트\n\n첫째, 전문가와의 충분한 상담이 필수적입니다. 개인의 상태와 목표에 따라 최적의 방법이 달라질 수 있기 때문입니다.\n\n둘째, 검증된 방법과 기술을 선택해야 합니다. ${cn}에서는 최신 장비와 검증된 프로토콜을 통해 안전하고 효과적인 결과를 보장합니다.\n\n셋째, 사후 관리의 중요성을 간과하지 마세요. 올바른 사후 관리는 결과의 만족도를 크게 높여줍니다.\n\n■ ${cn}만의 차별점\n\n${cn}은(는) 환자 한 분 한 분의 상태를 정밀하게 분석하여 맞춤형 솔루션을 제공합니다. 풍부한 임상 경험을 가진 전문의가 직접 상담부터 시술까지 책임집니다.\n\n■ 마무리\n\n${topic}에 대해 더 궁금한 사항이 있으시다면 ${cn}으로 편하게 문의해 주세요. 전문 상담을 통해 최적의 방법을 찾아드리겠습니다.\n\n#${topic.replace(/,\s*/g,' #').replace(/\s+/g,'')} #${cn.replace(/\s/g,'')} #${ct} #건강정보 #전문상담`;
+    updatePost(id, {content, status:'3_원고검수', manuscript_status:'AI초안완료'});
+    return content;
+  };
+
+  return {clients, posts: postsWithClient, stats, createPost, updatePost, advanceStatus, generateContent, getClient};
+}
+
+// ── Toast ──
+function ToastContainer({toasts}){return <div className="toast-container">{toasts.map((t,i)=><div key={i} className={`toast toast-${t.type}`}>{t.msg}</div>)}</div>;}
+
+// ── App ──
+function App() {
+  const store = useStore();
+  const [page, setPage] = useState('dashboard');
+  const [selectedPostId, setSelectedPostId] = useState(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const [detailTab, setDetailTab] = useState('content');
+  const [filterClient, setFilterClient] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+
+  const toast = (msg, type='success') => { setToasts(p=>[...p,{msg,type}]); setTimeout(()=>setToasts(p=>p.slice(1)),3000); };
+  const openDetail = (p) => { setSelectedPostId(p.id); setDetailTab('content'); setPage('detail'); };
+  const goBack = () => { setSelectedPostId(null); setPage('posts'); };
+  const selectedPost = store.posts.find(p => p.id === selectedPostId);
+
+  const navItems = [{id:'dashboard',label:'대시보드',icon:I.dash},{id:'posts',label:'포스트 관리',icon:I.list},{id:'calendar',label:'발행 캘린더',icon:I.cal},{id:'clients',label:'클라이언트',icon:I.users}];
+  const pageTitle = navItems.find(n=>n.id===page)?.label||'대시보드';
+
+  return (
+    <div>
+      <ToastContainer toasts={toasts}/>
+      <div className="sidebar">
+        <div className="sidebar-logo">블로그 운영관리<br/><span>열정의시간</span></div>
+        <div className="sidebar-nav">
+          {navItems.map(n=>(
+            <div key={n.id} className={`nav-item ${page===n.id?'active':''}`} onClick={()=>{setPage(n.id);setSelectedPostId(null);}}>
+              {n.icon}<span>{n.label}</span>
+            </div>
+          ))}
+        </div>
+        <div className="sidebar-footer">v1.0 — 블로그 운영관리 시스템</div>
+      </div>
+
+      <div className="header">
+        <div style={{display:'flex',alignItems:'center',gap:12}}>
+          {page==='detail'&&<button className="btn btn-secondary btn-sm" onClick={goBack}>{I.left} 목록</button>}
+          <div className="header-title">{page==='detail'?(selectedPost?.title||''):pageTitle}</div>
+        </div>
+        <button className="btn btn-primary" onClick={()=>setShowCreate(true)}>{I.plus} 새 포스트</button>
+      </div>
+
+      <div className="main"><div className="content">
+        {page==='dashboard'&&<Dashboard stats={store.stats} posts={store.posts} openDetail={openDetail}/>}
+        {page==='posts'&&<PostList posts={store.posts} clients={store.clients} openDetail={openDetail} fc={filterClient} sfc={setFilterClient} fs={filterStatus} sfs={setFilterStatus}/>}
+        {page==='detail'&&selectedPost&&<PostDetail post={selectedPost} store={store} toast={toast} tab={detailTab} setTab={setDetailTab}/>}
+        {page==='calendar'&&<CalendarView posts={store.posts} openDetail={openDetail}/>}
+        {page==='clients'&&<ClientsView clients={store.clients} posts={store.posts} openDetail={openDetail}/>}
+      </div></div>
+
+      {showCreate&&<CreateModal clients={store.clients} onClose={()=>setShowCreate(false)} onCreate={(d)=>{store.createPost(d);setShowCreate(false);toast('새 포스트가 생성되었습니다.');}}/>}
+    </div>
+  );
+}
+
+// ── Dashboard ──
+function Dashboard({stats, posts, openDetail}) {
+  const grouped = {};
+  STATUSES.forEach(s=>{grouped[s.key]=posts.filter(p=>p.status===s.key);});
+  return (
+    <div>
+      <div className="stat-grid">
+        <div className="stat-card"><div className="label">전체 포스트</div><div className="value">{stats.total}</div><div className="sub">전체 등록 포스트 수</div></div>
+        <div className="stat-card"><div className="label">진행 중</div><div className="value" style={{color:'var(--primary)'}}>{stats.in_progress}</div><div className="sub">현재 작업 중인 포스트</div></div>
+        <div className="stat-card"><div className="label">검수/컨펌 대기</div><div className="value" style={{color:'var(--warning)'}}>{stats.needs_attention}</div><div className="sub">확인이 필요한 포스트</div></div>
+        <div className="stat-card"><div className="label">발행 완료</div><div className="value" style={{color:'var(--success)'}}>{stats.done}</div><div className="sub">발행 완료 포스트</div></div>
+      </div>
+      <div className="section-title">진행 현황 (칸반 보드)</div>
+      <div className="kanban">
+        {STATUSES.map(s=>(
+          <div className="kanban-col" key={s.key}>
+            <div className="kanban-col-header" style={{borderColor:s.color}}>
+              <span style={{color:s.color}}>{s.label}</span>
+              <span className="count">{(grouped[s.key]||[]).length}</span>
+            </div>
+            {(grouped[s.key]||[]).map(p=>(
+              <div className="kanban-card" key={p.id} onClick={()=>openDetail(p)}>
+                <div className="card-client" style={{background:p.client_color+'20',color:p.client_color}}>{p.client_name}</div>
+                <div className="card-title">{p.title}</div>
+                <div className="card-date">{p.publish_date||'미정'}</div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Post List ──
+function PostList({posts, clients, openDetail, fc, sfc, fs, sfs}) {
+  let filtered = posts;
+  if(fc) filtered = filtered.filter(p=>p.client_id==fc);
+  if(fs) filtered = filtered.filter(p=>p.status===fs);
+  return (
+    <div>
+      <div className="filter-bar">
+        <select value={fc} onChange={e=>sfc(e.target.value)}><option value="">전체 클라이언트</option>{clients.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select>
+        <select value={fs} onChange={e=>sfs(e.target.value)}><option value="">전체 상태</option>{STATUSES.map(s=><option key={s.key} value={s.key}>{s.label}</option>)}</select>
+        <span style={{fontSize:12,color:'var(--text-sub)'}}>총 {filtered.length}건</span>
+      </div>
+      <div className="table-wrap"><table><thead><tr>
+        <th style={{width:40}}>ID</th><th>포스트명</th><th>클라이언트</th><th>진행상태</th><th>원고</th><th>카드뉴스</th><th>발행예정일</th><th>담당AE</th>
+      </tr></thead><tbody>
+        {filtered.map(p=>{const si=getStatus(p.status);return(
+          <tr key={p.id} onClick={()=>openDetail(p)} style={{cursor:'pointer'}}>
+            <td style={{color:'var(--text-sub)',fontWeight:600}}>#{p.id}</td>
+            <td style={{fontWeight:600}}>{p.title}</td>
+            <td><span style={{display:'inline-flex',alignItems:'center',gap:6}}><span className="client-dot" style={{background:p.client_color}}/>{p.client_name}</span></td>
+            <td><span className={`badge badge-${si.n}`}>{si.label}</span></td>
+            <td style={{fontSize:12}}>{p.manuscript_status}</td>
+            <td style={{fontSize:12}}>{p.cardnews_status}</td>
+            <td>{p.publish_date||'-'}</td>
+            <td>{p.assignee||'-'}</td>
+          </tr>
+        );})}
+      </tbody></table></div>
+    </div>
+  );
+}
+
+// ── Post Detail ──
+function PostDetail({post, store, toast, tab, setTab}) {
+  const [editMode, setEditMode] = useState(false);
+  const [editContent, setEditContent] = useState(post.content||'');
+  const [aiLoading, setAiLoading] = useState(false);
+
+  useEffect(()=>{ setEditContent(post.content||''); setEditMode(false); },[post.id, post.content]);
+
+  const cidx = STATUSES.findIndex(s=>s.key===post.status);
+  const next = cidx < STATUSES.length-1 ? STATUSES[cidx+1] : null;
+  const si = getStatus(post.status);
+
+  const handleGenerate = () => {
+    setAiLoading(true);
+    setTimeout(()=>{ const c = store.generateContent(post.id); setEditContent(c); setAiLoading(false); toast('AI 원고가 생성되었습니다.'); }, 1200);
+  };
+
+  const handleAdvance = () => { store.advanceStatus(post.id); toast(`상태가 "${next.label}"(으)로 변경되었습니다.`); };
+  const handleSave = () => { store.updatePost(post.id, {content:editContent}); setEditMode(false); toast('원고가 저장되었습니다.'); };
+
+  return (
+    <div>
+      <div className="workflow">
+        {STATUSES.map((s,i)=><div key={s.key} className={`workflow-step ${i<cidx?'done':i===cidx?'current':'future'}`}>{i<cidx?'✓':''} {s.label}</div>)}
+      </div>
+      <div className="detail-grid">
+        <div className="detail-main">
+          <div className="tabs">
+            <div className={`tab ${tab==='content'?'active':''}`} onClick={()=>setTab('content')}>원고 내용</div>
+            <div className={`tab ${tab==='cardnews'?'active':''}`} onClick={()=>setTab('cardnews')}>카드뉴스</div>
+          </div>
+          {tab==='content'&&(
+            !post.content && post.status==='2_AI원고생성' ? (
+              <div className="text-center" style={{padding:'40px 0'}}>
+                <div style={{fontSize:48,marginBottom:16}}>*</div>
+                <p style={{marginBottom:16,color:'var(--text-sub)'}}>AI가 원고 초안을 자동 생성합니다.</p>
+                <button className="btn btn-primary btn-lg" onClick={handleGenerate} disabled={aiLoading}>
+                  {aiLoading?<><span className="spinner"/> 생성 중...</>:<>{I.ai} AI 원고 생성</>}
+                </button>
+              </div>
+            ) : !post.content ? (
+              <div className="text-center" style={{padding:'40px 0',color:'var(--text-sub)'}}>
+                <p>아직 원고가 작성되지 않았습니다.</p>
+                <p style={{fontSize:12,marginTop:8}}>상태를 "AI원고생성" 단계로 진행하면 AI가 원고를 생성합니다.</p>
+              </div>
+            ) : (
+              <div>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+                  <span style={{fontSize:13,fontWeight:600}}>원고 내용</span>
+                  {!editMode?<button className="btn btn-secondary btn-sm" onClick={()=>setEditMode(true)}>{I.edit} 수정</button>
+                  :<div style={{display:'flex',gap:8}}>
+                    <button className="btn btn-secondary btn-sm" onClick={()=>{setEditMode(false);setEditContent(post.content);}}>취소</button>
+                    <button className="btn btn-success btn-sm" onClick={handleSave}>{I.check} 저장</button>
+                  </div>}
+                </div>
+                {editMode?<textarea value={editContent} onChange={e=>setEditContent(e.target.value)} style={{width:'100%',minHeight:400,padding:16,border:'1px solid var(--border)',borderRadius:8,fontFamily:'inherit',fontSize:13,lineHeight:1.8}}/>
+                :<div style={{whiteSpace:'pre-wrap',lineHeight:1.8,fontSize:13,padding:16,background:'#f8fafc',borderRadius:8}}>{post.content}</div>}
+              </div>
+            )
+          )}
+          {tab==='cardnews'&&(
+            <div>
+              <p style={{fontSize:13,color:'var(--text-sub)',marginBottom:16}}>카드뉴스 구성: 썸네일 + 3장 카드 (1080x1080px)</p>
+              <div className="cardnews-preview">
+                {[{t:'*',n:'썸네일',d:'타이틀 + 키비주얼'},{t:'1',n:'카드 1',d:'핵심 포인트 #1'},{t:'2',n:'카드 2',d:'핵심 포인트 #2'},{t:'CTA',n:'카드 3',d:'예약/문의 유도'}].map((c,i)=>(
+                  <div className="cn-frame" key={i}><div style={{fontSize:24,marginBottom:8}}>{c.t}</div><strong>{c.n}</strong><span style={{marginTop:4}}>{c.d}</span></div>
+                ))}
+              </div>
+              <div style={{marginTop:20,padding:16,background:'#f8fafc',borderRadius:8,fontSize:13}}>
+                <div style={{fontWeight:700,marginBottom:8}}>카드뉴스 상태: <span className={`badge badge-${si.n}`}>{post.cardnews_status}</span></div>
+                {post.figma_url?<p>Figma 링크: <a href={post.figma_url} target="_blank" rel="noreferrer" style={{color:'var(--primary)'}}>{post.figma_url}</a></p>
+                :<p style={{color:'var(--text-sub)'}}>Figma 템플릿이 아직 연결되지 않았습니다.</p>}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="detail-sidebar">
+          <div className="detail-info">
+            <h3>진행 액션</h3>
+            {post.status==='2_AI원고생성'&&!post.content&&(
+              <button className="btn btn-primary" onClick={handleGenerate} disabled={aiLoading} style={{width:'100%',justifyContent:'center',marginBottom:8}}>
+                {aiLoading?<><span className="spinner"/> 생성 중...</>:<>{I.ai} AI 원고 생성</>}
+              </button>
+            )}
+            {next?<button className="btn btn-success" onClick={handleAdvance} style={{width:'100%',justifyContent:'center'}}>{I.right} 다음 단계: {next.label}</button>
+            :<div style={{textAlign:'center',color:'var(--success)',fontWeight:600}}>발행 완료</div>}
+          </div>
+          <div className="detail-info">
+            <h3>포스트 정보</h3>
+            {[['클라이언트',post.client_name],['현재 상태',null],['주제 키워드',post.topic||'-'],['발행예정일',post.publish_date||'-'],['담당 AE',post.assignee||'-'],['에디터',post.editor||'-'],['디자이너',post.designer||'-']].map(([l,v],i)=>(
+              <div className="info-row" key={i}><span className="label">{l}</span>
+                {l==='현재 상태'?<span className={`badge badge-${si.n}`}>{si.label}</span>:<span style={l==='클라이언트'?{fontWeight:600}:{}}>{v}</span>}
+              </div>
+            ))}
+          </div>
+          <div className="detail-info">
+            <h3>완성도 현황</h3>
+            <div className="info-row"><span className="label">원고 완성도</span><span style={{fontWeight:600}}>{post.manuscript_status}</span></div>
+            <div className="info-row"><span className="label">카드뉴스 완성도</span><span style={{fontWeight:600}}>{post.cardnews_status}</span></div>
+            {post.blog_url&&<div className="info-row"><span className="label">블로그 URL</span><a href={post.blog_url} target="_blank" rel="noreferrer" style={{color:'var(--primary)',fontSize:12}}>바로가기</a></div>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Calendar ──
+function CalendarView({posts, openDetail}) {
+  const [year,setYear]=useState(2026);
+  const [month,setMonth]=useState(4);
+  const firstDay=new Date(year,month-1,1).getDay();
+  const dim=new Date(year,month,0).getDate();
+  const prevDim=new Date(year,month-1,0).getDate();
+  const today=new Date();
+  const days=[];
+  for(let i=firstDay-1;i>=0;i--) days.push({d:prevDim-i,other:true});
+  for(let i=1;i<=dim;i++) days.push({d:i,other:false,isToday:year===today.getFullYear()&&month===today.getMonth()+1&&i===today.getDate()});
+  while(days.length<42) days.push({d:days.length-firstDay-dim+1,other:true});
+  const eventsFor=(day)=>{if(day.other)return[];const ds=`${year}-${String(month).padStart(2,'0')}-${String(day.d).padStart(2,'0')}`;return posts.filter(p=>p.publish_date===ds);};
+  const prev=()=>{if(month===1){setMonth(12);setYear(y=>y-1);}else setMonth(m=>m-1);};
+  const next=()=>{if(month===12){setMonth(1);setYear(y=>y+1);}else setMonth(m=>m+1);};
+  return (
+    <div>
+      <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24}}>
+        <button className="btn btn-secondary btn-sm" onClick={prev}>{I.left}</button>
+        <span style={{fontSize:18,fontWeight:800}}>{year}년 {month}월</span>
+        <button className="btn btn-secondary btn-sm" onClick={next}>{I.right}</button>
+      </div>
+      <div className="calendar-grid">
+        {['일','월','화','수','목','금','토'].map(d=><div className="cal-header" key={d}>{d}</div>)}
+        {days.map((day,i)=>(
+          <div key={i} className={`cal-day ${day.other?'other-month':''} ${day.isToday?'today':''}`}>
+            <div className="day-num">{day.d}</div>
+            {eventsFor(day).map(p=><div key={p.id} className="cal-event" style={{background:p.client_color+'20',color:p.client_color}} onClick={()=>openDetail(p)}>{p.title}</div>)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Clients ──
+function ClientsView({clients, posts, openDetail}) {
+  return (
+    <div>
+      <div className="section-title">클라이언트 관리</div>
+      <div className="section-sub">등록된 클라이언트와 포스트 현황을 확인합니다.</div>
+      <div className="client-grid">
+        {clients.map(c=>{
+          const cp=posts.filter(p=>p.client_id===c.id);
+          const done=cp.filter(p=>p.status==='7_발행완료').length;
+          return(
+            <div className="client-card" key={c.id}>
+              <div style={{display:'flex',alignItems:'center',marginBottom:12}}>
+                <span className="client-dot" style={{background:c.color,width:12,height:12}}/><span style={{fontWeight:700,fontSize:15}}>{c.name}</span>
+              </div>
+              <div style={{fontSize:12,color:'var(--text-sub)',marginBottom:12}}>{c.type} · {c.importance} · {c.status}</div>
+              <div style={{display:'flex',gap:16,fontSize:13}}>
+                <div><span style={{color:'var(--text-sub)'}}>전체 </span><strong>{cp.length}</strong></div>
+                <div><span style={{color:'var(--primary)'}}>진행 </span><strong>{cp.length-done}</strong></div>
+                <div><span style={{color:'var(--success)'}}>완료 </span><strong>{done}</strong></div>
+              </div>
+              {cp.length>0&&<div style={{marginTop:12,paddingTop:12,borderTop:'1px solid var(--border)'}}>
+                {cp.slice(0,3).map(p=><div key={p.id} onClick={()=>openDetail(p)} style={{fontSize:12,padding:'4px 0',cursor:'pointer',display:'flex',justifyContent:'space-between'}}>
+                  <span className="truncate" style={{flex:1}}>{p.title}</span>
+                  <span className={`badge badge-${getStatus(p.status).n}`} style={{marginLeft:8,fontSize:10}}>{getStatus(p.status).label}</span>
+                </div>)}
+              </div>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Create Modal ──
+function CreateModal({clients, onClose, onCreate}) {
+  const [f, setF]=useState({client_id:'',title:'',topic:'',assignee:'',editor:'',designer:'',publish_date:''});
+  const set=(k,v)=>setF(p=>({...p,[k]:v}));
+  const submit=(e)=>{e.preventDefault();if(!f.client_id||!f.title)return;onCreate(f);};
+  return(
+    <div className="modal-overlay" onClick={onClose}><div className="modal" onClick={e=>e.stopPropagation()}>
+      <div className="modal-header"><h2>새 포스트 생성</h2><button className="close-btn" onClick={onClose}>&times;</button></div>
+      <form onSubmit={submit}>
+        <div className="modal-body">
+          <div className="form-row">
+            <div className="form-group"><label>클라이언트 *</label><select value={f.client_id} onChange={e=>set('client_id',Number(e.target.value))} required><option value="">선택하세요</option>{clients.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+            <div className="form-group"><label>발행예정일</label><input type="date" value={f.publish_date} onChange={e=>set('publish_date',e.target.value)}/></div>
+          </div>
+          <div className="form-group"><label>포스트 제목 *</label><input value={f.title} onChange={e=>set('title',e.target.value)} placeholder="블로그 포스트 제목을 입력하세요" required/></div>
+          <div className="form-group"><label>주제 키워드</label><input value={f.topic} onChange={e=>set('topic',e.target.value)} placeholder="쉼표로 구분 (예: 피부관리, 레이저, 여드름)"/></div>
+          <div className="form-row">
+            <div className="form-group"><label>담당 AE</label><input value={f.assignee} onChange={e=>set('assignee',e.target.value)}/></div>
+            <div className="form-group"><label>에디터</label><input value={f.editor} onChange={e=>set('editor',e.target.value)}/></div>
+          </div>
+          <div className="form-group"><label>디자이너</label><input value={f.designer} onChange={e=>set('designer',e.target.value)}/></div>
+        </div>
+        <div className="modal-footer">
+          <button type="button" className="btn btn-secondary" onClick={onClose}>취소</button>
+          <button type="submit" className="btn btn-primary">포스트 생성</button>
+        </div>
+      </form>
+    </div></div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
